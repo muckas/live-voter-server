@@ -1,18 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"encoding/json"
 	"live-voter-server/log"
 )
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Homepage, yo!")
-	log.Debug("Request: /")
+type ApiResponse struct {
+	Error string `json:"error"`
+	Message string `json:"message"`
+}
+
+func check(w http.ResponseWriter, r *http.Request) {
+	var response ApiResponse
+	log.Debug("endpoint hit: /check")
+	response = ApiResponse{
+		Error: "OK",
+		Message: "Success",
+	}
+	json.NewEncoder(w).Encode(response)
 }
 
 func handleRequests() {
-	http.HandleFunc("/", homePage)
+	http.HandleFunc("/check", check)
 	log.Error(http.ListenAndServe(":8080", nil).Error())
 }
 
@@ -20,4 +30,5 @@ func main() {
 	log.Init("logs", "live-voter-server")
 	log.Info("Live Voter server START")
 	handleRequests()
+	log.Info("Live Voter server STOP")
 }
