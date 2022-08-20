@@ -9,6 +9,7 @@ import (
 type ApiResponse struct {
 	Error string `json:"error"`
 	Message string `json:"message"`
+	Data map[string]string `json:data`
 }
 
 func check(w http.ResponseWriter, r *http.Request) {
@@ -16,7 +17,8 @@ func check(w http.ResponseWriter, r *http.Request) {
 	log.Debug("endpoint hit: /check")
 	response = ApiResponse{
 		Error: "OK",
-		Message: "Success",
+		Message: "OK",
+		Data: map[string]string {},
 	}
 	json.NewEncoder(w).Encode(response)
 }
