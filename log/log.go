@@ -12,7 +12,7 @@ var (
 	LOGNAME string
 )
 
-func logWrite(line string, level string) {
+func logWrite(line any, level string) {
 	var now time.Time
 	var date, datetime, formatted_line, logfile string
 	now = time.Now()
@@ -34,19 +34,19 @@ func logWrite(line string, level string) {
 	}
 }
 
-func Debug(line string) {
+func Debug(line any) {
 	logWrite(line, "DEBUG")
 }
 
-func Info(line string) {
+func Info(line any) {
 	logWrite(line, "INFO")
 }
 
-func Warning(line string) {
+func Warning(line any) {
 	logWrite(line, "WARNING")
 }
 
-func Error(line string) {
+func Error(line any) {
 	logWrite(line, "ERROR")
 }
 
