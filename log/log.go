@@ -14,8 +14,11 @@ var (
 
 func textToLine(text []interface{}) string {
 	var line string = ""
-	for _, s := range text {
-		line += fmt.Sprint(s)
+	for arg_num, arg := range text {
+		if arg_num > 0 {
+			line += " "
+		}
+		line += fmt.Sprint(arg)
 	}
 	return line
 }
