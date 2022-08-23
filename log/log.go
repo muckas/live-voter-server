@@ -18,7 +18,7 @@ func textToLine(text []interface{}) string {
 		if arg_num > 0 {
 			line += " "
 		}
-		line += fmt.Sprint(arg)
+		line += fmt.Sprintf("%+v", arg)
 	}
 	return line
 }
