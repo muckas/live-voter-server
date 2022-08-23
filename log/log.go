@@ -8,20 +8,26 @@ import (
 )
 
 var (
-	LOGDIR string
-	LOGNAME string
+	LOGDIR string = "logs"
+	LOGNAME string = "log"
 )
 
-func logWrite(line any, level string) {
-	var now time.Time
-	var date, datetime, formatted_line, logfile string
-	now = time.Now()
-	datetime = now.Format("2006-01-02 15:04:05.000")
-	formatted_line = fmt.Sprintf("%s : %s : %s\n", datetime, level, line)
+func textToLine(text []interface{}) string {
+	var line string = ""
+	for _, s := range text {
+		line += fmt.Sprint(s)
+	}
+	return line
+}
+
+func logWrite(level string, line string) {
+	var now time.Time = time.Now()
+	var datetime string = now.Format("2006-01-02 15:04:05.000")
+	var formatted_line string = fmt.Sprintf("%s : %s : %s\n", datetime, level, line)
 	fmt.Printf(formatted_line)
 
-	date = now.Format("2006-01-02")
-	logfile = fmt.Sprintf("%s-%s.log", date, LOGNAME)
+	var date string = now.Format("2006-01-02")
+	var logfile string = fmt.Sprintf("%s-%s.log", date, LOGNAME)
 
 	f, err := os.OpenFile(filepath.Join(LOGDIR, logfile), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
@@ -34,20 +40,20 @@ func logWrite(line any, level string) {
 	}
 }
 
-func Debug(line any) {
-	logWrite(line, "DEBUG")
+func Debug(text ...any) {
+	logWrite("DEBUG", textToLine(text))
 }
 
-func Info(line any) {
-	logWrite(line, "INFO")
+func Info(text ...any) {
+	logWrite("INFO", textToLine(text))
 }
 
-func Warning(line any) {
-	logWrite(line, "WARNING")
+func Warning(text ...any) {
+	logWrite("WARNING", textToLine(text))
 }
 
-func Error(line any) {
-	logWrite(line, "ERROR")
+func Error(text ...any) {
+	logWrite("ERROR", textToLine(text))
 }
 
 func Init(logdir string, logname string) {
