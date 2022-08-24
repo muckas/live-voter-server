@@ -10,6 +10,8 @@ import (
 	"live-voter-server/log"
 )
 
+const VERSION string = "0.1.0"
+
 type ApiResponse struct {
 	Error string `json:"error"`
 	Message string `json:"message"`
@@ -24,7 +26,7 @@ func matchAll(w http.ResponseWriter, r *http.Request) {
 func check(w http.ResponseWriter, r *http.Request) {
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
-		Message: "OK",
+		Message: VERSION,
 		Data: map[string]string {},
 	}
 	json.NewEncoder(w).Encode(response)
@@ -48,8 +50,14 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 	}
 	form_file, _, err := r.FormFile("fileupload")
+	if err != nil {
+		log.Error("form_file", err)
+	}
 	defer form_file.Close()
 	upload_file, err := os.OpenFile(filepath.Join("data", "image.png"), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Error("upload_file", err)
+	}
 	defer upload_file.Close()
 	io.Copy(upload_file, form_file)
 	log.Debug(r.RemoteAddr, r.URL, "data/image.png")
@@ -65,7 +73,7 @@ func handleRequests() {
 
 func main() {
 	log.Init("logs", "live-voter-server")
-	log.Info("Live Voter server START ")
+	log.Info("Live Voter server START", "v" + VERSION)
 	err := os.Mkdir("data", 0600)
 	if err != nil {
 		log.Warning(err)
