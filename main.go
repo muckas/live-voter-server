@@ -10,7 +10,7 @@ import (
 	"live-voter-server/log"
 )
 
-const VERSION string = "0.1.0"
+const VERSION string = "0.2.0"
 
 type ApiResponse struct {
 	Error string `json:"error"`
@@ -24,6 +24,7 @@ func matchAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func check(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: VERSION,
@@ -34,6 +35,7 @@ func check(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveImage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var image_path string = filepath.Join("data", "image.png")
 	buf, err := ioutil.ReadFile(image_path)
 	if err != nil {
@@ -45,6 +47,7 @@ func serveImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func uploadFile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	err := r.ParseMultipartForm(5 * 1024 * 1024)
 	if err != nil {
 		log.Error(err)
