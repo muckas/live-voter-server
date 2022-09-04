@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 	"live-voter-server/log"
+	"github.com/google/uuid"
 )
 
 const VERSION string = "0.2.0"
@@ -28,7 +28,7 @@ func check(w http.ResponseWriter, r *http.Request) {
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: VERSION,
-		Data: map[string]string {},
+		Data: map[string]string{},
 	}
 	json.NewEncoder(w).Encode(response)
 	log.Debug(r.RemoteAddr, r.URL, "Response:", response)
@@ -37,7 +37,7 @@ func check(w http.ResponseWriter, r *http.Request) {
 func serveImage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var image_path string = filepath.Join("data", "image.png")
-	buf, err := ioutil.ReadFile(image_path)
+	buf, err := os.ReadFile(image_path)
 	if err != nil {
 		log.Error(err)
 	}
@@ -66,11 +66,37 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, r.URL, "data/image.png")
 }
 
+func newVote(w http.ResponseWriter, r *http.Request) {
+	var vote_id = uuid.New().String()
+	vote_data, _ := io.ReadAll(r.Body)
+	var response ApiResponse = ApiResponse{
+		Error: "OK",
+		Message: vote_id,
+		Data: map[string]string{},
+	}
+	err := os.Mkdir(filepath.Join("data", vote_id), 0600)
+	if err != nil {
+		log.Warning(err)
+	}
+	f, err := os.OpenFile(filepath.Join("data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		log.Warning(err)
+	}
+	defer f.Close()
+	_, err = f.Write(vote_data)
+	if err != nil {
+		log.Warning(err)
+	}
+	json.NewEncoder(w).Encode(response)
+	log.Debug(r.RemoteAddr, r.URL, "Data:", string(vote_data), "Response:", response)
+}
+
 func handleRequests() {
 	http.HandleFunc("/", matchAll)
 	http.HandleFunc("/check", check)
 	http.HandleFunc("/image", serveImage)
 	http.HandleFunc("/upload", uploadFile)
+	http.HandleFunc("/new-vote", newVote)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 
