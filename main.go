@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"io"
 	"path/filepath"
-	"live-voter-server/log"
+	"strings"
 	"github.com/google/uuid"
+	"live-voter-server/log"
 )
 
 const VERSION string = "0.2.0"
@@ -19,11 +20,12 @@ type ApiResponse struct {
 }
 
 func matchAll(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
 	http.NotFound(w, r)
-	log.Debug(r.RemoteAddr, r.URL, "404")
 }
 
 func check(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
@@ -31,10 +33,10 @@ func check(w http.ResponseWriter, r *http.Request) {
 		Data: map[string]string{},
 	}
 	json.NewEncoder(w).Encode(response)
-	log.Debug(r.RemoteAddr, r.URL, "Response:", response)
 }
 
 func serveImage(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var image_path string = filepath.Join("data", "image.png")
 	buf, err := os.ReadFile(image_path)
@@ -43,10 +45,10 @@ func serveImage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "image/png")
 	w.Write(buf)
-	log.Debug(r.RemoteAddr, r.URL, "image/png")
 }
 
 func uploadFile(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	err := r.ParseMultipartForm(5 * 1024 * 1024)
 	if err != nil {
@@ -63,7 +65,6 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer upload_file.Close()
 	io.Copy(upload_file, form_file)
-	log.Debug(r.RemoteAddr, r.URL, "data/image.png")
 }
 
 func newVote(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +89,14 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 		log.Warning(err)
 	}
 	json.NewEncoder(w).Encode(response)
-	log.Debug(r.RemoteAddr, r.URL, "Data:", string(vote_data), "Response:", response)
+	log.Debug(r.RemoteAddr, r.URL, "Data:", string(vote_data))
+}
+
+func voteData(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_id string = url_fields[len(url_fields)-1]
+	http.ServeFile(w, r, filepath.Join("data", vote_id, "vote_data.json"))
 }
 
 func handleRequests() {
@@ -97,6 +105,7 @@ func handleRequests() {
 	http.HandleFunc("/image", serveImage)
 	http.HandleFunc("/upload", uploadFile)
 	http.HandleFunc("/new-vote", newVote)
+	http.HandleFunc("/vote-data/", voteData)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 
