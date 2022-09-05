@@ -35,18 +35,6 @@ func check(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func serveImage(w http.ResponseWriter, r *http.Request) {
-	log.Debug(r.RemoteAddr, r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	var image_path string = filepath.Join("data", "image.png")
-	buf, err := os.ReadFile(image_path)
-	if err != nil {
-		log.Error(err)
-	}
-	w.Header().Set("Content-Type", "image/png")
-	w.Write(buf)
-}
-
 func newVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, r.URL)
 	var vote_id = uuid.New().String()
@@ -108,13 +96,22 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	io.Copy(upload_file, form_file)
 }
 
+func image(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_id string = url_fields[len(url_fields)-2]
+	var image_index string = url_fields[len(url_fields)-1]
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	http.ServeFile(w, r, filepath.Join("data", vote_id, image_index+".png"))
+}
+
 func handleRequests() {
 	http.HandleFunc("/", matchAll)
 	http.HandleFunc("/check", check)
-	http.HandleFunc("/image", serveImage)
 	http.HandleFunc("/new-vote", newVote)
 	http.HandleFunc("/vote-data/", voteData)
 	http.HandleFunc("/upload-image/", uploadImage)
+	http.HandleFunc("/image/", image)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 
