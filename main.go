@@ -47,28 +47,10 @@ func serveImage(w http.ResponseWriter, r *http.Request) {
 	w.Write(buf)
 }
 
-func uploadFile(w http.ResponseWriter, r *http.Request) {
-	log.Debug(r.RemoteAddr, r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	err := r.ParseMultipartForm(5 * 1024 * 1024)
-	if err != nil {
-		log.Error(err)
-	}
-	form_file, _, err := r.FormFile("fileupload")
-	if err != nil {
-		log.Error("form_file", err)
-	}
-	defer form_file.Close()
-	upload_file, err := os.OpenFile(filepath.Join("data", "image.png"), os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		log.Error("upload_file", err)
-	}
-	defer upload_file.Close()
-	io.Copy(upload_file, form_file)
-}
-
 func newVote(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
 	var vote_id = uuid.New().String()
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	vote_data, _ := io.ReadAll(r.Body)
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
@@ -77,35 +59,62 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 	}
 	err := os.Mkdir(filepath.Join("data", vote_id), 0600)
 	if err != nil {
-		log.Warning(err)
+		log.Error(err)
 	}
 	f, err := os.OpenFile(filepath.Join("data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
-		log.Warning(err)
+		log.Error(err)
 	}
 	defer f.Close()
 	_, err = f.Write(vote_data)
 	if err != nil {
-		log.Warning(err)
+		log.Error(err)
 	}
+	log.Debug("Created new vote:", vote_id)
 	json.NewEncoder(w).Encode(response)
-	log.Debug(r.RemoteAddr, r.URL, "Data:", string(vote_data))
 }
 
 func voteData(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, r.URL)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-1]
 	http.ServeFile(w, r, filepath.Join("data", vote_id, "vote_data.json"))
+}
+
+func uploadImage(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, r.URL)
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_id string = url_fields[len(url_fields)-2]
+	var image_index string = url_fields[len(url_fields)-1]
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	err := r.ParseMultipartForm(5 * 1024 * 1024)
+	if err != nil {
+		log.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	form_file, _, err := r.FormFile("fileupload")
+	if err != nil {
+		log.Error("form_file", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	defer form_file.Close()
+	upload_file, err := os.OpenFile(filepath.Join("data", vote_id, image_index+".png"), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Error("upload_file", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	defer upload_file.Close()
+	io.Copy(upload_file, form_file)
 }
 
 func handleRequests() {
 	http.HandleFunc("/", matchAll)
 	http.HandleFunc("/check", check)
 	http.HandleFunc("/image", serveImage)
-	http.HandleFunc("/upload", uploadFile)
 	http.HandleFunc("/new-vote", newVote)
 	http.HandleFunc("/vote-data/", voteData)
+	http.HandleFunc("/upload-image/", uploadImage)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 
