@@ -6,6 +6,10 @@ type ApiResponse struct {
 	Data    struct{} `json:data`
 }
 
+type ApiHostVoteRequest struct {
+	VoteName string `json:"vote_name"`
+}
+
 type VoteState string
 const (
 	Intro VoteState = "intro"

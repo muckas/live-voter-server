@@ -25,12 +25,12 @@ func create_data_dir() {
 	var dir_name string
 	err = os.Mkdir("data", 0600)
 	if err != nil {
-		log.Warning(err)
+		log.Debug(err)
 	}
 	for _, dir_name = range []string{"vote_data", "active_votes"} {
 		err = os.Mkdir(filepath.Join("data", dir_name), 0600)
 		if err != nil {
-			log.Warning(err)
+			log.Debug(err)
 		}
 	}
 }
