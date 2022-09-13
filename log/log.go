@@ -14,10 +14,7 @@ var (
 
 func textToLine(text []interface{}) string {
 	var line string = ""
-	for arg_num, arg := range text {
-		if arg_num > 0 {
-			line += " "
-		}
+	for _, arg := range text {
 		line += fmt.Sprintf("%+v", arg)
 	}
 	return line
