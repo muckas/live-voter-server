@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 	"path/filepath"
+	"reflect"
 )
 
 var (
@@ -13,9 +14,16 @@ var (
 )
 
 func textToLine(text []interface{}) string {
+	var prev_string, is_string bool
 	var line string = ""
-	for _, arg := range text {
+	prev_string = false
+	for arg_num, arg := range text {
+		is_string = arg != nil && reflect.TypeOf(arg).Kind() == reflect.String
+		if arg_num > 0 && !is_string && !prev_string {
+			line += " "
+		}
 		line += fmt.Sprintf("%+v", arg)
+		prev_string = is_string
 	}
 	return line
 }
