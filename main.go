@@ -9,12 +9,6 @@ import (
 
 const VERSION string = "0.3.0"
 
-type ApiResponse struct {
-	Error   string   `json:"error"`
-	Message string   `json:"message"`
-	Data    struct{} `json:data`
-}
-
 func handleRequests() {
 	http.HandleFunc("/", matchAll)
 	http.HandleFunc("/check", check)
