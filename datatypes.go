@@ -5,3 +5,22 @@ type ApiResponse struct {
 	Message string   `json:"message"`
 	Data    struct{} `json:data`
 }
+
+type VoteState string
+const (
+	Intro VoteState = "intro"
+	Waiting = "wait"
+	Voting = "vote"
+)
+
+type VoteItem struct {
+	Name string `json:"item_name"`
+	Votes int `json:"item_votes"`
+}
+
+type ActiveVoteData struct {
+	State VoteState `json:"state"`
+	VoteName string `json:"vote_name"`
+	PageName string `json:"page_name"`
+	VoteItems []VoteItem `json:"vote_items"`
+}

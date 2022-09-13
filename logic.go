@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"live-voter-server/log"
 )
 
@@ -55,10 +56,10 @@ func voteCleanup(votes_dir string, vote_lifetime time.Duration) (int, error) {
 func startNewVote() (string, error) {
 	var max_votes int = 100
 	var vote_lifetime time.Duration = 10 * time.Minute
+	var votes_dir string = filepath.Join("data", "active_votes")
 	var code string
 	var err error
 	var num_active_votes int
-	var votes_dir string = filepath.Join("data", "active_votes")
 	num_active_votes, err = voteCleanup(votes_dir, vote_lifetime)
 	if num_active_votes >= max_votes {
 		log.Info("Max votes exceeded (max ", max_votes, ")")
@@ -76,6 +77,24 @@ func startNewVote() (string, error) {
 		log.Error(err)
 		return "", err
 	}
+	var vote_data ActiveVoteData = ActiveVoteData{
+		State: Intro,
+		VoteName: "Test name",
+	}
+	var vote_byte_data []byte
+	vote_byte_data, err = json.Marshal(vote_data)
+	if err != nil {
+		log.Error(err)
+		return "", errors.New("error creating a vote")
+	}
+	var file *os.File
+	file, err = os.Create(filepath.Join(votes_dir, code, "active_vote_data.json"))
+	if err != nil {
+		log.Error(err)
+		return "", errors.New("error creating a vote")
+	}
+	defer file.Close()
+	file.Write(vote_byte_data)
 	log.Debug("Created active vote: ", code)
 	return code, nil
 }
