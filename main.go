@@ -17,6 +17,8 @@ func handleRequests() {
 	http.HandleFunc("/upload-image/", uploadImage)
 	http.HandleFunc("/image/", image)
 	http.HandleFunc("/host-vote", hostVote)
+	http.HandleFunc("/get-active-vote/", getActiveVote)
+	http.HandleFunc("/keep-active-vote/", keepActiveVote)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"os"
 	"io"
 	"path/filepath"
@@ -13,16 +14,15 @@ import (
 )
 
 func isError(err error, w http.ResponseWriter, error_message string) bool {
-	var response ApiResponse
 	if err != nil {
 		if error_message == "" {
 			error_message = err.Error()
 		}
 		log.Error("Error in ", log.TraceCaller(3), ": ", err)
-		response = ApiResponse{
+		var response ApiResponse = ApiResponse{
 			Error: "ERROR",
 			Message: error_message,
-			Data: struct{}{},
+			Data: nil,
 		}
 		json.NewEncoder(w).Encode(response)
 		return true
@@ -42,7 +42,7 @@ func check(w http.ResponseWriter, r *http.Request) {
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: VERSION,
-		Data: struct{}{},
+		Data: nil,
 	}
 	json.NewEncoder(w).Encode(response)
 }
@@ -51,20 +51,20 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var err error
-	var vote_data []byte
-	var f *os.File
 	var vote_id = uuid.New().String()
+	var vote_data []byte
 	vote_data, _ = io.ReadAll(r.Body)
 	err = os.Mkdir(filepath.Join("data", "vote_data", vote_id), 0600)
 	if isError(err, w, "Error saving vote") {
 		return
 	}
-	f, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
+	var file *os.File
+	file, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
 	if isError(err, w, "Error saving vote") {
 		return
 	}
-	defer f.Close()
-	_, err = f.Write(vote_data)
+	defer file.Close()
+	_, err = file.Write(vote_data)
 	if isError(err, w, "Error saving vote") {
 		return
 	}
@@ -72,7 +72,7 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: vote_id,
-		Data: struct{}{},
+		Data: nil,
 	}
 	json.NewEncoder(w).Encode(response)
 }
@@ -89,8 +89,6 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var err error
-	var form_file multipart.File
-	var upload_file *os.File
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-2]
 	var image_index string = url_fields[len(url_fields)-1]
@@ -98,11 +96,13 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	if isError(err, w, "Error parsing request form") {
 		return
 	}
+	var form_file multipart.File
 	form_file, _, err = r.FormFile("fileupload")
 	if isError(err, w, "FileForm 'fileupload' not found") {
 		return
 	}
 	defer form_file.Close()
+	var upload_file *os.File
 	upload_file, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, image_index+".png"), os.O_WRONLY|os.O_CREATE, 0666)
 	if isError(err, w, "Error saving file") {
 		return
@@ -124,14 +124,13 @@ func hostVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var err error
-	var vote_code string
 	var vote_byte_data []byte
 	var host_vote_request ApiHostVoteRequest
-	var response ApiResponse
 	vote_byte_data, err = io.ReadAll(r.Body)
 	if isError(err, w, "Error reading request") {
 		return
 	}
+	var vote_code string
 	err = json.Unmarshal(vote_byte_data, &host_vote_request)
 	if isError(err, w, "Invalid request") {
 		return
@@ -140,10 +139,63 @@ func hostVote(w http.ResponseWriter, r *http.Request) {
 	if isError(err, w, "") {
 		return
 	}
-	response = ApiResponse{
+	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: vote_code,
-		Data: struct{}{},
+		Data: nil,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func getActiveVote(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, " ", r.URL)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var err error
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_code string = url_fields[len(url_fields)-1]
+	var active_vote_bytes []byte
+	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if isError(err, w, "Invalid vote code") {
+		return
+	}
+	var active_vote_data ActiveVoteData
+	err = json.Unmarshal(active_vote_bytes, &active_vote_data)
+	if isError(err, w, "Corrupted vote data, unable to proceed") {
+		return
+	}
+	var response ApiResponse = ApiResponse{
+		Error: "OK",
+		Message: vote_code,
+		Data: active_vote_data,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func keepActiveVote(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, " ", r.URL)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var err error
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_code string = url_fields[len(url_fields)-1]
+	var now time.Time = time.Now().Local()
+	_, err = os.Stat(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if os.IsNotExist(err) {
+		var response ApiResponse = ApiResponse{
+			Error: "ERROR",
+			Message: "Invalid vote code",
+			Data: nil,
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	err = os.Chtimes(filepath.Join("data", "active_votes", vote_code + ".json"), now, now)
+	if isError(err, w, "Unable to keep vote alive") {
+		return
+	}
+	var response ApiResponse = ApiResponse{
+		Error: "OK",
+		Message: "OK",
+		Data: nil,
 	}
 	json.NewEncoder(w).Encode(response)
 }

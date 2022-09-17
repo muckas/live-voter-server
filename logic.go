@@ -32,19 +32,19 @@ func voteCleanup(votes_dir string, vote_lifetime time.Duration) (int, error) {
 		return 0, err
 	}
 	var index int = 0
-	var dir_info fs.FileInfo
-	var dir_time time.Time
+	var file_info fs.FileInfo
+	var file_time time.Time
 	var now time.Time = time.Now()
 	for index < len(dir_content) {
-		dir_info, err = dir_content[index].Info()
-		dir_time = dir_info.ModTime()
-		if dir_time.Add(vote_lifetime).Before(now) { // if modification time is more then vote_lifetime ago
-			err = os.RemoveAll(filepath.Join(votes_dir, dir_info.Name()))
+		file_info, err = dir_content[index].Info()
+		file_time = file_info.ModTime()
+		if file_time.Add(vote_lifetime).Before(now) { // if modification time is more then vote_lifetime ago
+			err = os.RemoveAll(filepath.Join(votes_dir, file_info.Name()))
 			if err != nil {
 				log.Error(err)
 				return 0, err
 			}
-			log.Debug("Removed inactive vote: ", dir_info.Name())
+			log.Debug("Removed inactive vote: ", file_info.Name())
 			dir_content = append(dir_content[:index], dir_content[index+1:]...)
 		} else {
 			index++
@@ -72,15 +72,10 @@ func startNewVote(vote_name string) (string, error) {
 	}
 	for {
 		code, err = generateNewVoteCode()
-		_, err = os.Stat(filepath.Join(votes_dir, code))
+		_, err = os.Stat(filepath.Join(votes_dir, code + ".json"))
 		if os.IsNotExist(err) {
 			break
 		}
-	}
-	err = os.Mkdir(filepath.Join(votes_dir, code), 0600)
-	if err != nil {
-		log.Error(err)
-		return "", errors.New("Error creating a vote")
 	}
 	var vote_data ActiveVoteData = ActiveVoteData{
 		State: Intro,
@@ -93,7 +88,7 @@ func startNewVote(vote_name string) (string, error) {
 		return "", errors.New("Error creating a vote")
 	}
 	var file *os.File
-	file, err = os.Create(filepath.Join(votes_dir, code, "active_vote_data.json"))
+	file, err = os.Create(filepath.Join(votes_dir, code + ".json"))
 	if err != nil {
 		log.Error(err)
 		return "", errors.New("Error creating a vote")
