@@ -14,9 +14,9 @@ var (
 	LOGNAME string = "log"
 )
 
-func caller_function() string {
+func TraceCaller(skip int) string {
 	pc := make([]uintptr, 15)
-	n := runtime.Callers(4, pc) // Callers( <number of callers back>, pc )
+	n := runtime.Callers(skip, pc) // Callers( <number of callers back>, pc )
 	frames := runtime.CallersFrames(pc[:n])
 	frame, _ := frames.Next()
 	return frame.Function
@@ -40,7 +40,7 @@ func textToLine(text []interface{}) string {
 func logWrite(level string, line string) {
 	var now time.Time = time.Now()
 	var datetime string = now.Format("2006-01-02 15:04:05.000")
-	var formatted_line string = fmt.Sprintf("%s : %s : %s : %s\n", datetime, level, caller_function(), line)
+	var formatted_line string = fmt.Sprintf("%s : %s : %s : %s\n", datetime, level, TraceCaller(4), line)
 	fmt.Printf(formatted_line)
 
 	var date string = now.Format("2006-01-02")

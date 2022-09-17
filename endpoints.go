@@ -18,7 +18,7 @@ func isError(err error, w http.ResponseWriter, error_message string) bool {
 		if error_message == "" {
 			error_message = err.Error()
 		}
-		log.Error(err)
+		log.Error("Error in ", log.TraceCaller(3), ": ", err)
 		response = ApiResponse{
 			Error: "ERROR",
 			Message: error_message,
@@ -55,17 +55,17 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 	var f *os.File
 	var vote_id = uuid.New().String()
 	vote_data, _ = io.ReadAll(r.Body)
-	err = os.Mkdir(filepath.Join("data", vote_id), 0600)
-	if isError(err, w, "Error on saving vote") {
+	err = os.Mkdir(filepath.Join("data", "vote_data", vote_id), 0600)
+	if isError(err, w, "Error saving vote") {
 		return
 	}
 	f, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
-	if isError(err, w, "Error on saving vote") {
+	if isError(err, w, "Error saving vote") {
 		return
 	}
 	defer f.Close()
 	_, err = f.Write(vote_data)
-	if isError(err, w, "Error on saving vote") {
+	if isError(err, w, "Error saving vote") {
 		return
 	}
 	log.Debug("Created new vote: ", vote_id)
