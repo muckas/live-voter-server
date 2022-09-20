@@ -13,8 +13,9 @@ type ApiHostVoteRequest struct {
 type VoteState string
 const (
 	Intro VoteState = "intro"
-	Waiting = "wait"
-	Voting = "vote"
+	Presenting = "presenting"
+	Voting = "voting"
+	Outro = "outro"
 )
 
 type VoteItem struct {
@@ -26,5 +27,5 @@ type ActiveVoteData struct {
 	State VoteState `json:"state"`
 	VoteName string `json:"vote_name"`
 	PageName string `json:"page_name"`
-	VoteItems []VoteItem `json:"vote_items"`
+	VoteItems map[int]VoteItem `json:"vote_items"`
 }

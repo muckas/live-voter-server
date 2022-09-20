@@ -125,12 +125,12 @@ func hostVote(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var err error
 	var vote_byte_data []byte
-	var host_vote_request ApiHostVoteRequest
 	vote_byte_data, err = io.ReadAll(r.Body)
 	if isError(err, w, "Error reading request") {
 		return
 	}
 	var vote_code string
+	var host_vote_request ApiHostVoteRequest
 	err = json.Unmarshal(vote_byte_data, &host_vote_request)
 	if isError(err, w, "Invalid request") {
 		return
@@ -180,6 +180,7 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 	var now time.Time = time.Now().Local()
 	_, err = os.Stat(filepath.Join("data", "active_votes", vote_code + ".json"))
 	if os.IsNotExist(err) {
+		log.Warning(err)
 		var response ApiResponse = ApiResponse{
 			Error: "ERROR",
 			Message: "Invalid vote code",
@@ -190,6 +191,51 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 	}
 	err = os.Chtimes(filepath.Join("data", "active_votes", vote_code + ".json"), now, now)
 	if isError(err, w, "Unable to keep vote alive") {
+		return
+	}
+	var response ApiResponse = ApiResponse{
+		Error: "OK",
+		Message: "OK",
+		Data: nil,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+func updateActiveVote(w http.ResponseWriter, r *http.Request) {
+	log.Debug(r.RemoteAddr, " ", r.URL)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var err error
+	var url_fields []string = strings.Split(r.URL.Path, "/")
+	var vote_code string = url_fields[len(url_fields)-1]
+	var active_vote_byte_data []byte
+	active_vote_byte_data, err = io.ReadAll(r.Body)
+	if isError(err, w, "Error reading request") {
+		return
+	}
+	var active_vote_data ActiveVoteData
+	err = json.Unmarshal(active_vote_byte_data, &active_vote_data) // Unmarshal to validate
+	if isError(err, w, "Invalid vote data") {
+		return
+	}
+	_, err = os.Stat(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if os.IsNotExist(err) { 
+		log.Warning(err)
+		var response ApiResponse = ApiResponse{
+			Error: "ERROR",
+			Message: "Invalid vote code",
+			Data: nil,
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	var file *os.File
+	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if isError(err, w, "Inable to change active vote") {
+		return
+	}
+	defer file.Close()
+	_, err = file.Write(active_vote_byte_data)
+	if isError(err, w, "Error writing vote data") {
 		return
 	}
 	var response ApiResponse = ApiResponse{

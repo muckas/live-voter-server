@@ -19,6 +19,7 @@ func handleRequests() {
 	http.HandleFunc("/host-vote", hostVote)
 	http.HandleFunc("/get-active-vote/", getActiveVote)
 	http.HandleFunc("/keep-active-vote/", keepActiveVote)
+	http.HandleFunc("/update-active-vote/", updateActiveVote)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 
