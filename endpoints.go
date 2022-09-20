@@ -30,15 +30,20 @@ func isError(err error, w http.ResponseWriter, error_message string) bool {
 	return false
 }
 
+func set_headers(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
+
 func matchAll(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	http.NotFound(w, r)
 }
 
 func check(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: VERSION,
@@ -49,7 +54,7 @@ func check(w http.ResponseWriter, r *http.Request) {
 
 func newVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var vote_id = uuid.New().String()
 	var vote_data []byte
@@ -79,7 +84,7 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 
 func voteData(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-1]
 	http.ServeFile(w, r, filepath.Join("data", "vote_data", vote_id, "vote_data.json"))
@@ -87,7 +92,7 @@ func voteData(w http.ResponseWriter, r *http.Request) {
 
 func uploadImage(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-2]
@@ -113,7 +118,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 
 func image(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-2]
 	var image_index string = url_fields[len(url_fields)-1]
@@ -122,7 +127,7 @@ func image(w http.ResponseWriter, r *http.Request) {
 
 func hostVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var vote_byte_data []byte
 	vote_byte_data, err = io.ReadAll(r.Body)
@@ -149,7 +154,7 @@ func hostVote(w http.ResponseWriter, r *http.Request) {
 
 func getActiveVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
@@ -173,7 +178,7 @@ func getActiveVote(w http.ResponseWriter, r *http.Request) {
 
 func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
@@ -203,7 +208,7 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 
 func updateActiveVote(w http.ResponseWriter, r *http.Request) {
 	log.Debug(r.RemoteAddr, " ", r.URL)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	set_headers(w)
 	var err error
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
