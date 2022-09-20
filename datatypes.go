@@ -3,7 +3,7 @@ package main
 type ApiResponse struct {
 	Error   string   `json:"error"`
 	Message string   `json:"message"`
-	Data    any `json:data`
+	Data    any `json:"data"`
 }
 
 type ApiHostVoteRequest struct {
