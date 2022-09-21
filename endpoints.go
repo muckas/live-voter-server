@@ -224,6 +224,10 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 	if isError(err, w, "Unable to keep vote alive") {
 		return
 	}
+	err = voteClientCleanup(vote_code)
+	if isError(err, w, "") {
+		return
+	}
 	var response ApiResponse = ApiResponse{
 		Error: "OK",
 		Message: "OK",
@@ -318,7 +322,7 @@ func joinVote(w http.ResponseWriter, r *http.Request) {
 	}
 	var now time.Time = time.Now()
 	active_vote_info.Clients[client_request.ID] = now
-	active_vote_info.VoteData.ClientCount += 1
+	active_vote_info.VoteData.ClientCount = len(active_vote_info.Clients) - 1
 	var file *os.File
 	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
 	if isError(err, w, "Inable to change active vote") {

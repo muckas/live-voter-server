@@ -107,3 +107,49 @@ func startNewVote(host_id string, vote_name string) (string, error) {
 	log.Debug("Created active vote: ", code)
 	return code, nil
 }
+
+func voteClientCleanup(vote_code string) error {
+	var err error
+	var active_vote_bytes []byte
+	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if err != nil {
+		log.Error(err)
+		return errors.New("Invalid vote code")
+	}
+	var active_vote_info ActiveVoteInfo
+	err = json.Unmarshal(active_vote_bytes, &active_vote_info)
+	if err != nil {
+		log.Error(err)
+		return errors.New("Corrupted vote data")
+	}
+	var vote_clients map[string]time.Time = active_vote_info.Clients
+	var client_id string
+	var last_ping time.Time
+	var now time.Time = time.Now()
+	var client_lifetime time.Duration = 30 * time.Second
+	for client_id, last_ping = range vote_clients {
+		if last_ping.Add(client_lifetime).Before(now) { // if last_ping is more then client_lifetime ago
+			delete(vote_clients, client_id)
+		}
+	}
+	active_vote_info.Clients = vote_clients
+	active_vote_info.VoteData.ClientCount = len(active_vote_info.Clients) - 1
+	var file *os.File
+	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	if err != nil {
+		log.Error(err)
+		return errors.New("Error opening vote data")
+	}
+	defer file.Close()
+	active_vote_bytes, err = json.Marshal(active_vote_info)
+	if err != nil {
+		log.Error(err)
+		return errors.New("Error updating vote data")
+	}
+	_, err = file.Write(active_vote_bytes)
+	if err != nil {
+		log.Error(err)
+		return errors.New("Error updating vote data")
+	}
+	return nil
+}
