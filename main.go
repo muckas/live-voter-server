@@ -7,7 +7,7 @@ import (
 	"live-voter-server/log"
 )
 
-const VERSION string = "0.3.0"
+const VERSION string = "0.4.0"
 
 func handleRequests() {
 	http.HandleFunc("/", matchAll)
@@ -20,6 +20,7 @@ func handleRequests() {
 	http.HandleFunc("/get-active-vote/", getActiveVote)
 	http.HandleFunc("/keep-active-vote/", keepActiveVote)
 	http.HandleFunc("/update-active-vote/", updateActiveVote)
+	http.HandleFunc("/join-vote/", joinVote)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 

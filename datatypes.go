@@ -1,5 +1,9 @@
 package main
 
+import (
+	"time"
+)
+
 type ApiResponse struct {
 	Error   string   `json:"error"`
 	Message string   `json:"message"`
@@ -14,6 +18,10 @@ type ApiHostVoteRequest struct {
 type UpdateActiveVoteRequest struct {
 	HostID string `json:"host_id"`
 	VoteData ActiveVoteData `json:"vote_data"`
+}
+
+type ClientRequest struct {
+	ID string `json:"id"`
 }
 
 type VoteState string
@@ -37,13 +45,8 @@ type ActiveVoteData struct {
 	VoteItems map[int]VoteItem `json:"vote_items"`
 }
 
-type ActiveVoteClient struct {
-	Id string `json:"client_id"`
-	LastPing string `json:"last_ping"`
-}
-
 type ActiveVoteInfo struct {
 	HostID string `json:"host_id"`
-	Clients []ActiveVoteClient `json:"clients"`
+	Clients map[string]time.Time `json:"clients"`
 	VoteData ActiveVoteData `json:"vote_data"`
 }

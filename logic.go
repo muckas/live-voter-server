@@ -82,7 +82,7 @@ func startNewVote(host_id string, vote_name string) (string, error) {
 	}
 	var vote_info ActiveVoteInfo = ActiveVoteInfo {
 		HostID: host_id,
-		Clients: []ActiveVoteClient{},
+		Clients: map[string]time.Time{},
 		VoteData: ActiveVoteData {
 			State: Intro,
 			ClientCount: 0,
