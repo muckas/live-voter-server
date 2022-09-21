@@ -21,6 +21,7 @@ func handleRequests() {
 	http.HandleFunc("/keep-active-vote/", keepActiveVote)
 	http.HandleFunc("/update-active-vote/", updateActiveVote)
 	http.HandleFunc("/join-vote/", joinVote)
+	http.HandleFunc("/send-vote/", sendVote)
 	log.Error(http.ListenAndServe(":8080", nil))
 }
 

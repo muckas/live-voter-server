@@ -20,6 +20,11 @@ type UpdateActiveVoteRequest struct {
 	VoteData ActiveVoteData `json:"vote_data"`
 }
 
+type SendVoteRequest struct {
+	ID string `json:"id"`
+	ItemID int `json:"item_id"`
+}
+
 type ClientRequest struct {
 	ID string `json:"id"`
 }
