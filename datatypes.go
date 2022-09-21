@@ -7,7 +7,13 @@ type ApiResponse struct {
 }
 
 type ApiHostVoteRequest struct {
+	HostID string `json:"host_id"`
 	VoteName string `json:"vote_name"`
+}
+
+type UpdateActiveVoteRequest struct {
+	HostID string `json:"host_id"`
+	VoteData ActiveVoteData `json:"vote_data"`
 }
 
 type VoteState string
@@ -25,7 +31,19 @@ type VoteItem struct {
 
 type ActiveVoteData struct {
 	State VoteState `json:"state"`
+	ClientCount int `json:"client_count"`
 	VoteName string `json:"vote_name"`
 	PageName string `json:"page_name"`
 	VoteItems map[int]VoteItem `json:"vote_items"`
+}
+
+type ActiveVoteClient struct {
+	Id string `json:"client_id"`
+	LastPing string `json:"last_ping"`
+}
+
+type ActiveVoteInfo struct {
+	HostID string `json:"host_id"`
+	Clients []ActiveVoteClient `json:"clients"`
+	VoteData ActiveVoteData `json:"vote_data"`
 }

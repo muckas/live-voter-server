@@ -54,7 +54,10 @@ func voteCleanup(votes_dir string, vote_lifetime time.Duration) (int, error) {
 	return len(dir_content), nil
 }
 
-func startNewVote(vote_name string) (string, error) {
+func startNewVote(host_id string, vote_name string) (string, error) {
+	if host_id == "" {
+		return "", errors.New("Invalid host id")
+	}
 	var max_votes int = 100
 	var vote_lifetime time.Duration = 10 * time.Minute
 	var votes_dir string = filepath.Join("data", "active_votes")
@@ -77,12 +80,18 @@ func startNewVote(vote_name string) (string, error) {
 			break
 		}
 	}
-	var vote_data ActiveVoteData = ActiveVoteData{
-		State: Intro,
-		VoteName: vote_name,
+	var vote_info ActiveVoteInfo = ActiveVoteInfo {
+		HostID: host_id,
+		Clients: []ActiveVoteClient{},
+		VoteData: ActiveVoteData {
+			State: Intro,
+			ClientCount: 0,
+			VoteName: vote_name,
+			VoteItems: map[int]VoteItem{},
+		},
 	}
 	var vote_byte_data []byte
-	vote_byte_data, err = json.Marshal(vote_data)
+	vote_byte_data, err = json.Marshal(vote_info)
 	if err != nil {
 		log.Error(err)
 		return "", errors.New("Error creating a vote")
