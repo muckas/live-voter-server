@@ -58,9 +58,8 @@ func startNewVote(host_id string, vote_name string) (string, error) {
 	if host_id == "" {
 		return "", errors.New("Invalid host id")
 	}
-	var max_votes int = 100
-	var vote_lifetime time.Duration = 10 * time.Minute
-	var votes_dir string = filepath.Join("data", "active_votes")
+	var vote_lifetime time.Duration = time.Duration(VOTE_LIFETIME) * time.Minute
+	var votes_dir string = filepath.Join(DATA_DIR, "active_votes")
 	var code string
 	var err error
 	var num_active_votes int
@@ -69,8 +68,8 @@ func startNewVote(host_id string, vote_name string) (string, error) {
 		log.Error(err)
 		return "", errors.New("Error creating a vote")
 	}
-	if num_active_votes >= max_votes {
-		log.Info("Max active votes exceeded (max ", max_votes, ")")
+	if num_active_votes >= MAX_VOTES {
+		log.Info("Max active votes exceeded (max ", MAX_VOTES, ")")
 		return "", errors.New("Max active votes exceeded")
 	}
 	for {
@@ -111,7 +110,7 @@ func startNewVote(host_id string, vote_name string) (string, error) {
 func voteClientCleanup(vote_code string) error {
 	var err error
 	var active_vote_bytes []byte
-	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	active_vote_bytes, err = os.ReadFile(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if err != nil {
 		log.Error(err)
 		return errors.New("Invalid vote code")
@@ -135,7 +134,7 @@ func voteClientCleanup(vote_code string) error {
 	active_vote_info.Clients = vote_clients
 	active_vote_info.VoteData.ClientCount = len(active_vote_info.Clients) - 1
 	var file *os.File
-	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	file, err = os.Create(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if err != nil {
 		log.Error(err)
 		return errors.New("Error opening vote data")

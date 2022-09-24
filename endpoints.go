@@ -59,12 +59,12 @@ func newVote(w http.ResponseWriter, r *http.Request) {
 	var vote_id = uuid.New().String()
 	var vote_data []byte
 	vote_data, _ = io.ReadAll(r.Body)
-	err = os.Mkdir(filepath.Join("data", "vote_data", vote_id), 0600)
+	err = os.Mkdir(filepath.Join(DATA_DIR, "vote_data", vote_id), 0600)
 	if isError(err, w, "Error saving vote") {
 		return
 	}
 	var file *os.File
-	file, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
+	file, err = os.OpenFile(filepath.Join(DATA_DIR, "vote_data", vote_id, "vote_data.json"), os.O_WRONLY|os.O_CREATE, 0600)
 	if isError(err, w, "Error saving vote") {
 		return
 	}
@@ -87,7 +87,7 @@ func voteData(w http.ResponseWriter, r *http.Request) {
 	set_headers(w)
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-1]
-	http.ServeFile(w, r, filepath.Join("data", "vote_data", vote_id, "vote_data.json"))
+	http.ServeFile(w, r, filepath.Join(DATA_DIR, "vote_data", vote_id, "vote_data.json"))
 }
 
 func uploadImage(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +108,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer form_file.Close()
 	var upload_file *os.File
-	upload_file, err = os.OpenFile(filepath.Join("data", "vote_data", vote_id, image_index+".png"), os.O_WRONLY|os.O_CREATE, 0666)
+	upload_file, err = os.OpenFile(filepath.Join(DATA_DIR, "vote_data", vote_id, image_index+".png"), os.O_WRONLY|os.O_CREATE, 0666)
 	if isError(err, w, "Error saving file") {
 		return
 	}
@@ -122,7 +122,7 @@ func image(w http.ResponseWriter, r *http.Request) {
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_id string = url_fields[len(url_fields)-2]
 	var image_index string = url_fields[len(url_fields)-1]
-	http.ServeFile(w, r, filepath.Join("data", "vote_data", vote_id, image_index+".png"))
+	http.ServeFile(w, r, filepath.Join(DATA_DIR, "vote_data", vote_id, image_index+".png"))
 }
 
 func hostVote(w http.ResponseWriter, r *http.Request) {
@@ -159,7 +159,7 @@ func getActiveVote(w http.ResponseWriter, r *http.Request) {
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
 	var active_vote_bytes []byte
-	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	active_vote_bytes, err = os.ReadFile(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Invalid vote code") {
 		return
 	}
@@ -181,7 +181,7 @@ func getActiveVote(w http.ResponseWriter, r *http.Request) {
 	var now time.Time = time.Now()
 	active_vote_info.Clients[client_request.ID] = now
 	var file *os.File
-	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	file, err = os.Create(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Inable to change active vote") {
 		return
 	}
@@ -209,7 +209,7 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
 	var now time.Time = time.Now().Local()
-	_, err = os.Stat(filepath.Join("data", "active_votes", vote_code + ".json"))
+	_, err = os.Stat(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if os.IsNotExist(err) {
 		log.Warning(err)
 		var response ApiResponse = ApiResponse{
@@ -220,7 +220,7 @@ func keepActiveVote(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	err = os.Chtimes(filepath.Join("data", "active_votes", vote_code + ".json"), now, now)
+	err = os.Chtimes(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"), now, now)
 	if isError(err, w, "Unable to keep vote alive") {
 		return
 	}
@@ -253,7 +253,7 @@ func updateActiveVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var active_vote_bytes []byte
-	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	active_vote_bytes, err = os.ReadFile(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Invalid vote code") {
 		return
 	}
@@ -273,7 +273,7 @@ func updateActiveVote(w http.ResponseWriter, r *http.Request) {
 	}
 	active_vote_info.VoteData = update_vote_request.VoteData
 	var file *os.File
-	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	file, err = os.Create(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Inable to change active vote") {
 		return
 	}
@@ -301,7 +301,7 @@ func joinVote(w http.ResponseWriter, r *http.Request) {
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
 	var active_vote_bytes []byte
-	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	active_vote_bytes, err = os.ReadFile(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Invalid vote code") {
 		return
 	}
@@ -324,7 +324,7 @@ func joinVote(w http.ResponseWriter, r *http.Request) {
 	active_vote_info.Clients[client_request.ID] = now
 	active_vote_info.VoteData.ClientCount = len(active_vote_info.Clients) - 1
 	var file *os.File
-	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	file, err = os.Create(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Inable to change active vote") {
 		return
 	}
@@ -352,7 +352,7 @@ func sendVote(w http.ResponseWriter, r *http.Request) {
 	var url_fields []string = strings.Split(r.URL.Path, "/")
 	var vote_code string = url_fields[len(url_fields)-1]
 	var active_vote_bytes []byte
-	active_vote_bytes, err = os.ReadFile(filepath.Join("data", "active_votes", vote_code + ".json"))
+	active_vote_bytes, err = os.ReadFile(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Invalid vote code") {
 		return
 	}
@@ -386,7 +386,7 @@ func sendVote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var file *os.File
-	file, err = os.Create(filepath.Join("data", "active_votes", vote_code + ".json"))
+	file, err = os.Create(filepath.Join(DATA_DIR, "active_votes", vote_code + ".json"))
 	if isError(err, w, "Inable to change active vote") {
 		return
 	}
