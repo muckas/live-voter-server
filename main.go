@@ -14,6 +14,7 @@ var SERVER_ADDRESS string
 var URL_PATH string
 var DATA_DIR string
 var VOTE_LIFETIME int
+var CLIENT_LIFETIME int
 var MAX_VOTES int
 
 func handleRequests() {
@@ -53,6 +54,7 @@ func parse_flags() {
 	flag.StringVar(&URL_PATH, "urlpath", "/", "url path")
 	flag.StringVar(&DATA_DIR, "datadir", "data", "data directory")
 	flag.IntVar(&VOTE_LIFETIME, "votelifetime", 10, "vote lifetime in minutes")
+	flag.IntVar(&CLIENT_LIFETIME, "clientlifetime", 60, "client lifetime in seconds")
 	flag.IntVar(&MAX_VOTES, "maxvotes", 100, "max active votes allowed")
 	flag.Parse()
 }
@@ -65,6 +67,7 @@ func main() {
 	log.Info("URL path: ", URL_PATH)
 	log.Info("Data directory: ", DATA_DIR)
 	log.Info("Vote lifetime: ", VOTE_LIFETIME, "m")
+	log.Info("Client lifetime: ", CLIENT_LIFETIME, "s")
 	log.Info("Max votes allowed: ", MAX_VOTES)
 	create_data_dir()
 	handleRequests()

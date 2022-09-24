@@ -125,7 +125,7 @@ func voteClientCleanup(vote_code string) error {
 	var client_id string
 	var last_ping time.Time
 	var now time.Time = time.Now()
-	var client_lifetime time.Duration = 30 * time.Second
+	var client_lifetime time.Duration = time.Duration(CLIENT_LIFETIME) * time.Second
 	for client_id, last_ping = range vote_clients {
 		if last_ping.Add(client_lifetime).Before(now) { // if last_ping is more then client_lifetime ago
 			delete(vote_clients, client_id)
